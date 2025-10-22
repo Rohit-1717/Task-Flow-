@@ -13,7 +13,7 @@ const useAuthStore = create((set, get) => ({
     set({ loading: true, error: null });
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/auth/login",
+        "https://task-flow-cqd4.onrender.com/api/auth/login",
         { email, password }
       );
 
@@ -36,7 +36,7 @@ const useAuthStore = create((set, get) => ({
     set({ loading: true, error: null });
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/auth/register",
+        "https://task-flow-cqd4.onrender.com/api/auth/register",
         { name, email, password }
       );
 
@@ -69,7 +69,7 @@ const useAuthStore = create((set, get) => ({
     if (!token) return set({ user: null, isAuth: false });
 
     try {
-      const response = await axios.get("http://localhost:5000/api/auth/me", {
+      const response = await axios.get("https://task-flow-cqd4.onrender.com/api/auth/me", {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (response.data) set({ user: response.data, isAuth: true });
@@ -107,7 +107,7 @@ const useAuthStore = create((set, get) => ({
           Authorization: `Bearer ${token}`,
         },
       };
-      const { data } = await axios.put("http://localhost:5000/api/auth/profile", formData, config);
+      const { data } = await axios.put("https://task-flow-cqd4.onrender.com/api/auth/profile", formData, config);
 
       // Update store
       set({ user: data, loading: false });
@@ -135,7 +135,7 @@ const useAuthStore = create((set, get) => ({
         },
       };
       const { data } = await axios.put(
-        "http://localhost:5000/api/auth/password",
+        "https://task-flow-cqd4.onrender.com/api/auth/password",
         { currentPassword, newPassword },
         config
       );
