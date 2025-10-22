@@ -10,6 +10,11 @@ import Login from "./Pages/Auth/Login/Login";
 import Signup from "./Pages/Auth/Signup/Signup";
 import Tasks from "./Pages/Tasks/Tasks";
 import Profile from "./Pages/User/Profile/Profile";
+import Features from "./Pages/Features/Features";
+import About from "./Pages/About/About";
+
+import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute";
+import NotFound from "./Pages/NotFound/NotFound";
 
 function App() {
   const { theme } = useTheme();
@@ -31,11 +36,32 @@ function App() {
 
       <div className="flex-grow">
         <Routes>
+          {/* Public Routes */}
           <Route path="/" element={<Hero />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
-          <Route path="/user-profile" element={<Profile />} />
-          <Route path="/tasks" element={<Tasks />} />
+          <Route path="/features" element={<Features />} />
+          <Route path="/about" element={<About />} />
+
+          {/* Protected Routes */}
+          <Route
+            path="/user-profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/tasks"
+            element={
+              <ProtectedRoute>
+                <Tasks />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </div>
 
