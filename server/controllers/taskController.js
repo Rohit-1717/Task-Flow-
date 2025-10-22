@@ -1,8 +1,6 @@
 import Task from '../models/taskModel.js';
 
-// @desc    Create a new task
-// @route   POST /api/tasks
-// @access  Private
+
 export const createTask = async (req, res) => {
   try {
     const { title, description, dueDate, priority } = req.body;
@@ -26,27 +24,50 @@ export const createTask = async (req, res) => {
   }
 };
 
-// @desc    Get all tasks for logged in user with pagination
-// @route   GET /api/tasks
-// @access  Private
+
 export const getTasks = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
+    const search = req.query.search || '';
     const skip = (page - 1) * limit;
 
-    const tasks = await Task.find({ createdBy: req.user._id })
+    // Build search query
+    let searchQuery = { createdBy: req.user._id };
+    
+    if (search) {
+      searchQuery = {
+        ...searchQuery,
+        $or: [
+          { title: { $regex: search, $options: 'i' } },
+          { description: { $regex: search, $options: 'i' } }
+        ]
+      };
+    }
+
+    // Add priority filter if provided
+    if (req.query.priority && req.query.priority !== 'all') {
+      searchQuery.priority = req.query.priority;
+    }
+
+    // Add status filter if provided
+    if (req.query.status && req.query.status !== 'all') {
+      searchQuery.status = req.query.status;
+    }
+
+    const tasks = await Task.find(searchQuery)
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
 
-    const total = await Task.countDocuments({ createdBy: req.user._id });
+    const total = await Task.countDocuments(searchQuery);
 
     res.json({
       tasks,
       currentPage: page,
       totalPages: Math.ceil(total / limit),
       totalTasks: total,
+      hasSearch: !!search, // Indicate if search was performed
     });
   } catch (error) {
     console.error('Get Tasks Error:', error.message);
@@ -54,9 +75,6 @@ export const getTasks = async (req, res) => {
   }
 };
 
-// @desc    Get single task
-// @route   GET /api/tasks/:id
-// @access  Private
 export const getTaskById = async (req, res) => {
   try {
     const task = await Task.findOne({ 
@@ -75,9 +93,7 @@ export const getTaskById = async (req, res) => {
   }
 };
 
-// @desc    Update a task
-// @route   PUT /api/tasks/:id
-// @access  Private
+
 export const updateTask = async (req, res) => {
   try {
     const { title, description, dueDate, priority, status } = req.body;
@@ -106,9 +122,7 @@ export const updateTask = async (req, res) => {
   }
 };
 
-// @desc    Delete a task
-// @route   DELETE /api/tasks/:id
-// @access  Private
+
 export const deleteTask = async (req, res) => {
   try {
     const task = await Task.findOne({ 
@@ -129,9 +143,7 @@ export const deleteTask = async (req, res) => {
   }
 };
 
-// @desc    Update task status
-// @route   PATCH /api/tasks/:id/status
-// @access  Private
+
 export const updateTaskStatus = async (req, res) => {
   try {
     const { status } = req.body;
@@ -159,9 +171,7 @@ export const updateTaskStatus = async (req, res) => {
   }
 };
 
-// @desc    Get tasks by priority
-// @route   GET /api/tasks/priority/:priority
-// @access  Private
+
 export const getTasksByPriority = async (req, res) => {
   try {
     const { priority } = req.params;
