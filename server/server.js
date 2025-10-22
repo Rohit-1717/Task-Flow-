@@ -13,7 +13,7 @@ connectDB();
 const app = express();
 
 // CORS configuration
-const whitelist = ["http://localhost:5173"]; // Allowed origins
+const whitelist = ["http://localhost:5173","https://task-flow-pink-eight.vercel.app"]; 
 const corsOptions = {
   origin: function (origin, callback) {
     if (!origin || whitelist.indexOf(origin) !== -1) {
