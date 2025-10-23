@@ -68,36 +68,29 @@ export const updateUserProfile = async (req, res) => {
     if (!user) return res.status(404).json({ message: "User not found" });
 
     const { name } = req.body;
-    const avatarFile = req.file; // multer gives us file if uploaded
+    const avatarFile = req.file;
 
-    // ✅ Check for at least one field
     if (!name && !avatarFile) {
-      return res.status(400).json({
-        message: "At least one field (name or avatar) is required to update",
-      });
+      return res.status(400).json({ message: "At least one field (name or avatar) is required" });
     }
 
-    // Store old avatar ID for async cleanup
     const oldAvatarPublicId = user.avatarPublicId;
 
-    // ✅ Update name if provided
+    // Update name
     if (name) user.name = name;
 
-    // ✅ Upload new avatar (if provided)
+    // Upload new avatar if provided
     if (avatarFile) {
       const uploadResult = await uploadOnCloudinary(avatarFile.path);
-      if (!uploadResult) {
-        return res.status(500).json({ message: "Failed to upload avatar" });
-      }
+      if (!uploadResult) return res.status(500).json({ message: "Failed to upload avatar" });
 
       user.avatar = uploadResult.secure_url;
       user.avatarPublicId = uploadResult.public_id;
     }
 
-    // ✅ Save updated user
     const updatedUser = await user.save();
 
-    // ✅ Respond immediately (don’t wait for Cloudinary deletion)
+    // Respond immediately
     res.json({
       _id: updatedUser._id,
       name: updatedUser.name,
@@ -107,12 +100,9 @@ export const updateUserProfile = async (req, res) => {
       token: generateToken(updatedUser._id),
     });
 
-    // 🧵 Delete old avatar in background (non-blocking)
-    if (avatarFile && oldAvatarPublicId) {
-      deleteFromCloudinary(oldAvatarPublicId)
-        .then(() => console.log("🧹 Old avatar deleted successfully"))
-        .catch((err) => console.error("⚠️ Error deleting old avatar:", err));
-    }
+    // Delete old avatar asynchronously
+    if (avatarFile && oldAvatarPublicId) deleteFromCloudinary(oldAvatarPublicId);
+
   } catch (error) {
     console.error("Update Profile Error:", error.message);
     res.status(500).json({ message: "Server error while updating profile" });
