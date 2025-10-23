@@ -3,33 +3,34 @@ import useAuthStore from "../../../store/authStore";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 
 const Profile = () => {
-  const { user, token, updateProfile, updatePassword, setUser } = useAuthStore();
+  const { user, updateProfile, updatePassword } = useAuthStore();
 
-  const [name, setName] = useState(user?.name || "");
+  // Local state for inputs
+  const [name, setName] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
-  const [avatar, setAvatar] = useState(null);
-  const [avatarPreview, setAvatarPreview] = useState(user?.avatar || "");
+  const [avatarFile, setAvatarFile] = useState(null); // selected file
+  const [avatarPreview, setAvatarPreview] = useState(""); // preview URL
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
 
-  // Sync local state when user changes
+  // Sync local state when Zustand user changes
   useEffect(() => {
     setName(user?.name || "");
     setAvatarPreview(user?.avatar || "");
   }, [user]);
 
-  // Avatar preview
+  // Handle avatar file selection
   const handleAvatarChange = (e) => {
     const file = e.target.files[0];
-    setAvatar(file);
+    setAvatarFile(file);
     if (file) setAvatarPreview(URL.createObjectURL(file));
   };
 
-  // Update profile instantly
+  // Handle profile update
   const handleProfileUpdate = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -38,16 +39,12 @@ const Profile = () => {
     try {
       const formData = new FormData();
       if (name) formData.append("name", name);
-      if (avatar) formData.append("avatar", avatar);
+      if (avatarFile) formData.append("avatar", avatarFile);
 
-      const updatedUser = await updateProfile(formData);
-
-      // Update local UI immediately
-      setName(updatedUser.name);
-      setAvatarPreview(updatedUser.avatar);
-      setUser(updatedUser); // Update auth store
+      await updateProfile(formData); // updates Zustand store
 
       setMessage("Profile updated successfully!");
+      setAvatarFile(null); // reset file input
     } catch (err) {
       setMessage(err.message || "Failed to update profile");
     }
@@ -55,7 +52,7 @@ const Profile = () => {
     setLoading(false);
   };
 
-  // Update password
+  // Handle password update
   const handlePasswordUpdate = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -119,7 +116,11 @@ const Profile = () => {
               />
             </div>
 
-            <button type="submit" className="btn btn-primary w-full">
+            <button
+              type="submit"
+              className={`btn btn-primary w-full ${loading ? "loading" : ""}`}
+              disabled={loading}
+            >
               Update Profile
             </button>
           </form>
@@ -167,7 +168,11 @@ const Profile = () => {
               </span>
             </div>
 
-            <button type="submit" className="btn btn-primary w-full">
+            <button
+              type="submit"
+              className={`btn btn-primary w-full ${loading ? "loading" : ""}`}
+              disabled={loading}
+            >
               Update Password
             </button>
           </form>

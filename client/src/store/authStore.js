@@ -9,42 +9,48 @@ const useAuthStore = create((set, get) => ({
   loading: false,
   error: null,
   isAuth: false,
+  setUser: (user) => set({ user }),
   isInitialized: false, // NEW: Track if auth initialization is complete
 
   // Login
   login: async (email, password) => {
     set({ loading: true, error: null });
     try {
-      const response = await axios.post(
-        `${server_url}/api/auth/login`,
-        { email, password }
-      );
+      const response = await axios.post(`${server_url}/api/auth/login`, {
+        email,
+        password,
+      });
 
-      if (!response.data?.token) throw new Error("Invalid response from server");
+      if (!response.data?.token)
+        throw new Error("Invalid response from server");
 
       const { _id, name, email: userEmail, avatar, token } = response.data;
-      
+
       // Store in localStorage
       localStorage.setItem("authToken", token);
-      localStorage.setItem("user", JSON.stringify({ _id, name, email: userEmail, avatar }));
-      
-      set({ 
-        user: { _id, name, email: userEmail, avatar }, 
-        token, 
-        isAuth: true, 
-        loading: false, 
-        error: null 
+      localStorage.setItem(
+        "user",
+        JSON.stringify({ _id, name, email: userEmail, avatar })
+      );
+
+      set({
+        user: { _id, name, email: userEmail, avatar },
+        token,
+        isAuth: true,
+        loading: false,
+        error: null,
       });
 
       return { success: true };
     } catch (err) {
-      const errorMessage = err.response?.data?.message || err.message || "Login failed";
-      set({ 
-        error: errorMessage, 
-        loading: false, 
-        isAuth: false, 
-        user: null, 
-        token: null 
+      const errorMessage =
+        err.response?.data?.message || err.message || "Login failed";
+      set({
+        error: errorMessage,
+        loading: false,
+        isAuth: false,
+        user: null,
+        token: null,
       });
       throw new Error(errorMessage);
     }
@@ -54,36 +60,42 @@ const useAuthStore = create((set, get) => ({
   register: async (name, email, password) => {
     set({ loading: true, error: null });
     try {
-      const response = await axios.post(
-        `${server_url}/api/auth/register`,
-        { name, email, password }
-      );
+      const response = await axios.post(`${server_url}/api/auth/register`, {
+        name,
+        email,
+        password,
+      });
 
-      if (!response.data?.token) throw new Error("Registration failed - no token received");
+      if (!response.data?.token)
+        throw new Error("Registration failed - no token received");
 
       const { _id, name: userName, email: userEmail, token } = response.data;
-      
+
       // Store in localStorage
       localStorage.setItem("authToken", token);
-      localStorage.setItem("user", JSON.stringify({ _id, name: userName, email: userEmail }));
-      
-      set({ 
-        user: { _id, name: userName, email: userEmail }, 
-        token, 
-        isAuth: true, 
-        loading: false, 
-        error: null 
+      localStorage.setItem(
+        "user",
+        JSON.stringify({ _id, name: userName, email: userEmail })
+      );
+
+      set({
+        user: { _id, name: userName, email: userEmail },
+        token,
+        isAuth: true,
+        loading: false,
+        error: null,
       });
 
       return { success: true };
     } catch (err) {
-      const errorMessage = err.response?.data?.message || err.message || "Registration failed";
-      set({ 
-        error: errorMessage, 
-        loading: false, 
-        isAuth: false, 
-        user: null, 
-        token: null 
+      const errorMessage =
+        err.response?.data?.message || err.message || "Registration failed";
+      set({
+        error: errorMessage,
+        loading: false,
+        isAuth: false,
+        user: null,
+        token: null,
       });
       throw new Error(errorMessage);
     }
@@ -93,12 +105,12 @@ const useAuthStore = create((set, get) => ({
   logout: () => {
     localStorage.removeItem("authToken");
     localStorage.removeItem("user");
-    set({ 
-      user: null, 
-      token: null, 
-      isAuth: false, 
+    set({
+      user: null,
+      token: null,
+      isAuth: false,
       error: null,
-      isInitialized: true 
+      isInitialized: true,
     });
   },
 
@@ -117,14 +129,14 @@ const useAuthStore = create((set, get) => ({
       const response = await axios.get(`${server_url}/api/auth/me`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      
+
       if (response.data) {
         // Update localStorage with fresh user data
         localStorage.setItem("user", JSON.stringify(response.data));
-        set({ 
-          user: response.data, 
+        set({
+          user: response.data,
           isAuth: true,
-          isInitialized: true 
+          isInitialized: true,
         });
       }
       return response.data;
@@ -133,11 +145,11 @@ const useAuthStore = create((set, get) => ({
       // Clear invalid token
       localStorage.removeItem("authToken");
       localStorage.removeItem("user");
-      set({ 
-        user: null, 
-        token: null, 
+      set({
+        user: null,
+        token: null,
         isAuth: false,
-        isInitialized: true 
+        isInitialized: true,
       });
       return null;
     }
@@ -147,32 +159,31 @@ const useAuthStore = create((set, get) => ({
   init: async () => {
     const token = localStorage.getItem("authToken");
     const userData = localStorage.getItem("user");
-    
+
     if (token && userData) {
       try {
         // Set initial state from localStorage immediately
         const user = JSON.parse(userData);
-        set({ 
-          user, 
-          token, 
+        set({
+          user,
+          token,
           isAuth: true,
-          loading: true // Set loading true while we verify with server
+          loading: true, // Set loading true while we verify with server
         });
-        
+
         // Verify token with server
         await get().fetchCurrentUser();
         set({ loading: false });
-        
       } catch (error) {
         console.error("Auth initialization error:", error);
         localStorage.removeItem("authToken");
         localStorage.removeItem("user");
-        set({ 
-          user: null, 
-          token: null, 
-          isAuth: false, 
+        set({
+          user: null,
+          token: null,
+          isAuth: false,
           loading: false,
-          isInitialized: true 
+          isInitialized: true,
         });
       }
     } else {
@@ -194,15 +205,22 @@ const useAuthStore = create((set, get) => ({
           Authorization: `Bearer ${token}`,
         },
       };
-      const { data } = await axios.put(`${server_url}/api/auth/profile`, formData, config);
+      const { data } = await axios.put(
+        `${server_url}/api/auth/profile`,
+        formData,
+        config
+      );
 
       // Update store and localStorage
       localStorage.setItem("user", JSON.stringify(data));
       set({ user: data, loading: false });
-      
+
       return { success: true, data };
     } catch (err) {
-      const errorMessage = err.response?.data?.message || err.message || "Failed to update profile";
+      const errorMessage =
+        err.response?.data?.message ||
+        err.message ||
+        "Failed to update profile";
       set({ error: errorMessage, loading: false });
       throw new Error(errorMessage);
     }
@@ -230,7 +248,10 @@ const useAuthStore = create((set, get) => ({
       set({ loading: false });
       return { success: true, message: data.message };
     } catch (err) {
-      const errorMessage = err.response?.data?.message || err.message || "Failed to update password";
+      const errorMessage =
+        err.response?.data?.message ||
+        err.message ||
+        "Failed to update password";
       set({ error: errorMessage, loading: false });
       throw new Error(errorMessage);
     }
